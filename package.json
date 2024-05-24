@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "axios": "^1.7.2",
+    "uuid": "^9.0.1",
+    "venom-bot": "^5.1.0"
+  }
+}
