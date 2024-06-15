@@ -1,8 +1,9 @@
 const venom = require('venom-bot');
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
+const {validarData, diaDaSemana, disponivel} = require('./dataService');
+const { formatarNumerosMensagem } = require('./util');
 
-const {validarData} = require('./dataService');
 
 venom.create({
     session: "Barbearia-BOT",
@@ -11,11 +12,13 @@ venom.create({
 .then((client) => start(client))
 .catch((err) => console.log(err));
 
+
 // URL da API SheetsDB
 const sheetsDbUrl = 'https://sheetdb.io/api/v1/sapz5eicgzz66';
 
 // horários disponíveis 
-var horarios = ["9:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
+var horarios = ["9:00h", "10:00h", "11:00h", "13:00h", "14:00h", "15:00h", "16:00h", "17:00h", "18:00h", "19:00h"];
+horarios = formatarNumerosMensagem(horarios);
 
 // estados de conversação
 var state = {};
@@ -36,12 +39,13 @@ const start = (client) => {
         // início do atendimento
         if (currentState.step === 0) {
             client.sendText(chatId, "*Olá! Bem-vindo ao atendimento automático da barbearia West.* \n\n*O que deseja?* \n\n1️⃣ *Marcar um horário*\n2️⃣ *Ver serviços e preços*\n3️⃣ *Desmarcar Agendamento*");
+
             currentState.telefone = message.from;
 
             // inicia a etapa 1 
             currentState.step = 1;
 
-        // escolha de ação
+        // ETAPA 1 - DEFINE O QUE O USUÁRIO QUER FAZER 
         } else if (currentState.step === 1) {
             if (message.body === '1') {
                 currentState.servicoSelecionado = "marcar horario";
@@ -53,7 +57,7 @@ const start = (client) => {
                 currentState.servicoSelecionado = "ver serviços e preços";
 
                 // Mensagem de gancho para a etapa 2 
-                client.sendText(chatId, "*Aqui estão nossos serviços e preços:* \n*Corte de cabelo: R$30 💇🏻‍♂️* \n*Barba: R$20 🧔🏻‍♂️*\n*Combo (Corte + Barba): R$45 🧔🏻‍♂️💇🏻‍♂️* \n*Deseja Agendar?* \n1️⃣Sim \n2️⃣Não ");
+                client.sendText(chatId, "*Aqui estão nossos serviços e preços:* \n\n*Corte de cabelo: R$30* \n*Barba: R$20*\n*Combo (Corte + Barba): R$45* \n\n*Deseja Agendar?* \n1️⃣Sim \n2️⃣Não ");
                 currentState.step = 2; 
 
             } else if (message.body === '3') {
@@ -95,23 +99,41 @@ const start = (client) => {
 
         // SEGUNDA ETAPA
         } else if (currentState.step === 2) {
-
             // MARCAR HORÁRIO
             if (currentState.servicoSelecionado === "marcar horario") {
-                currentState.data = message.body.toString();
 
-                // formando os horários do dia especificado 
-                var horariosMensagem = "";
-                var ordem = 1;
-                horarios.forEach(horario => {
-                    horariosMensagem += `*${ordem}. ${horario}* *horas*\n`;
-                    ordem++;
-                });
+                if (!validarData(message.body)) {
+                    client.sendText(chatId, `*Essa data não é válida. Por favor, digite novamente.*`);
+                }
 
-                // mensagem gancho para a etapa 3
-                client.sendText(chatId, "*Me informa o horário que deseja ⏰*\n\n"+horariosMensagem);
-                currentState.step = 3;
+                else if (diaDaSemana(message.body) === "Domingo") {
+                    client.sendText(chatId, "*Infelizmente, não abrimos dia de domingo. Poderia escolher outra data? 😅*");
+
+                } else {
+                    disponivel(message.body)
+                    .then(disponibilidade => {
+                        if (disponibilidade){
+                            currentState.data = message.body.toString();
+
+                            // formando os horários do dia especificado 
+                            var horariosMensagem = "";
+                            horarios.forEach(horario => {
+                                horariosMensagem += `*${horario}*\n`;
+                            });
         
+                            // mensagem gancho para a etapa 3
+                            client.sendText(chatId, "*Me informa o horário que deseja ⏰*\n\n"+horariosMensagem);
+                            currentState.step = 3;
+                        }
+                        else {
+                            client.sendText(chatId, `Na data ${message.body}, a barbearia vai estar fechada o dia todo. Poderia escolher outro data, por favor?`);
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+                }
+
             // VER SERVIÇOS E PREÇOS
             } else if (currentState.servicoSelecionado === "ver serviços e preços") {
                 if (message.body === "1") {
@@ -121,7 +143,7 @@ const start = (client) => {
                     currentState.step = 2; 
                 } else {
                     // volta para o menu principal
-                    client.sendText(chatId, "*Obrigado por utilizar nosso serviço. Volte sempre!*");
+                    client.sendText(chatId, "*Sem problemas! Caso queira iniciar o atendimento novamente, basta enviar outra mensagem.*");
                     currentState.step = 0;
                 }
             }
@@ -168,7 +190,6 @@ const start = (client) => {
         // AGENDAMENTO - Finalizando e salvando agendamento na planilha (step === 4)
         } else if (currentState.step === 4) {
             if (currentState.servicoSelecionado === "marcar horario") {
-
                 currentState.nomeCliente = message.body;
                 currentState.id = uuidv4();
 
