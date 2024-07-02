@@ -11,7 +11,7 @@ function validarData(data) {
 
     const dia = parseInt(partes[0]);
     const mes = parseInt(partes[1]) - 1; 
-    const ano = parseInt(partes[2]);
+    const ano = new Date().getFullYear();
 
     //forma um objeto Date com a string da data fornecida 
     const dataFornecida = new Date(ano, mes, dia);
@@ -26,64 +26,64 @@ function validarData(data) {
     } 
 
     //Se a data for de hoje ou maior, ele faz a verificação de cada parte da data e se estiver ok, retorna true
-    return dataFornecida.getDate() === dia && dataFornecida.getMonth() === mes && dataFornecida.getFullYear() === ano;   
+    return dataFornecida.getDate() === dia && dataFornecida.getMonth() === mes;   
 }
 
 
 //pega o dia da semana de acordo com a data 
-function diaDaSemana(data){
-    const dataSeparada = data.toString().split('/');
-    const dia = parseInt(dataSeparada[0])
-    const mes = parseInt(dataSeparada[1] - 1)
-    const ano = parseInt(dataSeparada[2])
-    
+function diaDaSemana(data) {
+    const dataSeparada = data.split('/');
+    const dia = parseInt(dataSeparada[0]);
+    const mes = parseInt(dataSeparada[1]) - 1; // Mês começa em 0 em JavaScript
+    const ano = new Date().getFullYear(); // Obter o ano atual
+
     const dataFornecida = new Date(ano, mes, dia);
     const diasDaSemana = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
-    
+
     return diasDaSemana[dataFornecida.getDay()];
 }
 
- async function disponivel(data) {
-    data = data.replace("(", "");
-    data = data.replace(")", "");
+async function disponivel(data) {
+    // Remover parênteses se existirem
+    data = data.replace("(", "").replace(")", "");
 
-    const url = `${sheetsDbUrl}indisponivel?filter[data]=${data.toString()}`;
+    // Dividir a data pelo caractere "/"
+    const dataSeparada = data.split('/');
+
+    // Se a data fornecida tiver o ano, descartar o ano e considerar apenas dia e mês
+    if (dataSeparada.length === 3) {
+        data = `${dataSeparada[0]}/${dataSeparada[1]}`;
+    }
+
+    const url = `${sheetsDbUrl}indisponivel?filter[data]=${data}`;
 
     try {
         const response = await axios.get(url);
 
         if (response.data.indisponivel.length > 0) {
-            if (response.data.indisponivel[0].diaTodo == "x" || response.data.indisponivel[0].horarios.trim() == ""){
+            if (response.data.indisponivel[0].diaTodo == "x" || response.data.indisponivel[0].horarios.trim() == "") {
                 return false;
-
             } else {
                 return true;
             }
-
         } else {
             return true;
         }
-
     } catch (error) {
         console.log(error);
     }    
 }
+async function a(){
+    console.log(await disponivel('02/07/2024'));
+}
+a();
 
-// function atualizarDisponibilidade(horarios, data){
-//     const filtrarDataEHorario = (agendamentos) => {
-//         return agendamentos.map(agendamento => ({
-//           Data: agendamento.data,
-//           Horario: agendamento.horario
-//         }));
-//       };
 
-//     axios.get(`${sheetsDbUrl}/agendamento`)
-//         .then((response) => {
 
-//         })
-//         .catch((error) => {
-//             error.log('erro ao consultar data');
-//         })
+
+
+
+
 
 
 

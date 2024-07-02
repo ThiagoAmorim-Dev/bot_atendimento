@@ -5,7 +5,7 @@ const { validarData, diaDaSemana, disponivel, obterHorarioDisponivel } = require
 const { formatarNumerosMensagem } = require('./util');
 
 venom.create({
-    session: "Barbearia-BOT",
+    session: "Barbearia",
     multidevice: true,
 })
 .then((client) => start(client))
@@ -48,7 +48,7 @@ const start = (client) => {
             if (message.body === '1') {
                 currentState.servicoSelecionado = "marcar horario";
 
-                client.sendText(chatId, "*Por favor, digite a data (dd/mm/aaaa) que deseja 🗓️*");
+                client.sendText(chatId, "*Por favor, digite a data que deseja no formato (dia/mês) 🗓️*\n*Exemplo: 15/04*.");
                 currentState.step = 2;
 
             } else if (message.body === '2') {
@@ -80,7 +80,9 @@ const start = (client) => {
                     let agendamentosMensagem = "*Encontrei os seguintes horários marcados*";
 
                     currentState.agendamentos.forEach((agendamento, index) => {
-                        agendamentosMensagem += `\n\n*${index + 1}. ${agendamento.data} às ${agendamento.horario} para ${agendamento.nome}*`
+                        if (agendamento.telefone == message.from){
+                            agendamentosMensagem += `\n\n*${index + 1}. ${agendamento.data} às ${agendamento.horario} para ${agendamento.nome}*`
+                        }
                     });
                     agendamentosMensagem += "\n*Informe o número do agendamento que deseja desmarcar*";
 
