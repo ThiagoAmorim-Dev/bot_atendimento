@@ -73,10 +73,7 @@ async function disponivel(data) {
         console.log(error);
     }    
 }
-async function a(){
-    console.log(await disponivel('02/07/2024'));
-}
-a();
+
 
 
 
@@ -127,7 +124,7 @@ async function obterHorarioDisponivel(data){
     //filtragem dos horários marcados
     var diaSemana = diaDaSemana(data)
     var horarios_disponiveis = await obterHorariosPeloDia(diaSemana);
-    var response = await axios.get(`${sheetsDbUrl}agendamento?filter[data]=${data}`);
+    var response = await axios.get(`${sheetsDbUrl}agendamento?filter[Data]=${data}`);
 
     var horarios_marcados = response.data.agendamento;
     horarios_marcados = horarios_marcados.map(horario => horario.horario);
