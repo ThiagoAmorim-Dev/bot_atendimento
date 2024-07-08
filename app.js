@@ -64,7 +64,7 @@ const handleServicoSelecionado = async (client, chatId, currentState, message) =
     switch (message.body) {
         case '1':
             currentState.servicoSelecionado = "marcar horario";
-            client.sendText(chatId, "*Por favor, digite a data que deseja no formato (dia/mês) 🗓️*\n*Exemplo: 15/04*.");
+            client.sendText(chatId, "*Aviso: favor, agendar apenas uma pessoa por vez. Caso queira agendar para mais de uma pessoa, agende o seu horário e repita o processo para marcar outros horários*\n\n\n*Por favor, digite a data que deseja no formato (dia/mês) 🗓️*\n*Exemplo: (15/04)*");
             currentState.step = 2;
             break;
         case '2':
@@ -130,7 +130,7 @@ const handleDataSelecionada = async (client, chatId, currentState, message) => {
     } else if (currentState.servicoSelecionado === "ver serviços e preços") {
         if (message.body === "1") {
             currentState.servicoSelecionado = "marcar horario";
-            client.sendText(chatId, "*Por favor, informe a data (dd/mm/aaaa) que deseja 🗓️*");
+            client.sendText(chatId, "*Aviso: favor, agendar apenas uma pessoa por vez. Caso queira agendar para mais de uma pessoa, agende o seu horário e repita o processo para marcar outros horários*\n\n\n*Por favor, informe a data (dd/mm/aaaa) que deseja 🗓️*");
             currentState.step = 2;
         } else if (message.body === '2') {
             client.sendText(chatId, "*Sem problemas! Caso queira iniciar o atendimento novamente, basta enviar outra mensagem.*");
